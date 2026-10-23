@@ -218,3 +218,28 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# ==========================================
+# Course specific rules (CSC10014 - Assistant Project)
+# ==========================================
+# Allow .env.example template to be committed
+.env.*
+!.env.example
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Private & raw data
+data/raw/
+data/private/
+
+# IDE configurations
+.vscode/
+.idea/
+
+# OS junk files
+.DS_Store
+Thumbs.db
