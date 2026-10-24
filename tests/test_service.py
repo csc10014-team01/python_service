@@ -25,7 +25,7 @@ def test_rule_normal(service):
     res = service.handle(Message(text="thesis registration"))
     assert res.intent == Intent.RULE
     assert len(res.sources) == 1
-    assert res.sources[0].id == "H26-1"
+    assert res.sources[0].title == "Thesis Registration"
     assert not res.degraded
 
 
