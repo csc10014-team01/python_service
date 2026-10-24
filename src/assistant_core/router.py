@@ -1,12 +1,19 @@
 from assistant_core.models import Intent
 
+GREETINGS = frozenset({"hi", "hello", "hey", "xin chao"})
 
-def route(text: str, office_names: set[str] | None = None) -> Intent:
-    t = text.lower()
-    if any(w in t for w in ["hi", "hello", "hey"]):
+
+def route(text: str, office_names: set[str]) -> Intent:
+    """Classify a user question using simple rules."""
+    normalized = text.lower().strip().rstrip("?!.")
+
+    if normalized in GREETINGS:
         return Intent.GREETING
-    if any(w in t for w in ["tuition", "fee", "credits", "retake"]):
+
+    if "fee" in normalized or "tuition" in normalized:
         return Intent.FEE
-    if office_names and any(name in t for name in office_names):
+
+    if any(name in normalized for name in office_names):
         return Intent.OFFICE
+
     return Intent.RULE
