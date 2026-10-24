@@ -1,5 +1,6 @@
-from assistant_core.models import Intent, Message
 from assistant_core.responder import StubLLMResponder
+
+from assistant_core.models import Intent, Message
 
 
 def test_greeting_intent(service):
