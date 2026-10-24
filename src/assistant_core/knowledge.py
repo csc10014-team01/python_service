@@ -31,9 +31,7 @@ class OfficeDirectory:
                 rows = list(csv.DictReader(file))
 
         except FileNotFoundError as exc:
-            raise DataError(
-                f"Office file not found: {path}"
-            ) from exc
+            raise DataError(f"Office file not found: {path}") from exc
 
         offices = {
             row["name"].lower(): Office(
@@ -56,11 +54,7 @@ class OfficeDirectory:
         text = text.lower()
 
         return next(
-            (
-                office
-                for name, office in self._offices.items()
-                if name in text
-            ),
+            (office for name, office in self._offices.items() if name in text),
             None,
         )
 
@@ -85,14 +79,10 @@ class Handbook:
                 data = json.load(file)
 
         except FileNotFoundError as exc:
-            raise DataError(
-                f"Handbook file not found: {path}"
-            ) from exc
+            raise DataError(f"Handbook file not found: {path}") from exc
 
         except json.JSONDecodeError as exc:
-            raise DataError(
-                f"Invalid handbook JSON: {path}"
-            ) from exc
+            raise DataError(f"Invalid handbook JSON: {path}") from exc
 
         rules = [
             Rule(
@@ -109,11 +99,6 @@ class Handbook:
         query = query.lower()
 
         return next(
-            (
-                rule
-                for rule in self._rules
-                if query in rule.title.lower()
-                or query in rule.content.lower()
-            ),
+            (rule for rule in self._rules if query in rule.title.lower() or query in rule.content.lower()),
             None,
         )

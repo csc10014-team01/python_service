@@ -9,14 +9,13 @@ from assistant_core.knowledge import Rule
 class Responder(Protocol):
     """Interface for response generators."""
 
-    def explain(self, question: str, rule: Rule) -> str:
-        ...
+    def explain(self, question: str, rule: Rule) -> str: ...
 
 
 class TemplateResponder:
     """Generate a response without using an AI provider."""
 
-    def explain(self, question: str, rule: Rule,) -> str:
+    def explain(self, question: str, rule: Rule) -> str:
         return f"{rule.title}: {rule.text}"
 
 
@@ -28,10 +27,6 @@ class StubLLMResponder:
 
     def explain(self, question: str, rule: Rule) -> str:
         if self.fail:
-            raise ProviderError(
-                "stub provider unavailable"
-            )
+            raise ProviderError("stub provider unavailable")
 
-        return (
-            f"Based on '{rule.title}': {rule.text}"
-        )
+        return f"Based on '{rule.title}': {rule.text}"
