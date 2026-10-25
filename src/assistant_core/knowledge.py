@@ -17,12 +17,10 @@ def _require_non_empty_string(
     """Validate that a field is a non-empty string."""
 
     if not isinstance(value, str) or not value.strip():
-        raise DataError(
-            f"Invalid {source}: field '{field}' "
-            "must be a non-empty string."
-        )
+        raise DataError(f"Invalid {source}: field '{field}' must be a non-empty string.")
 
     return value.strip()
+
 
 @dataclass(frozen=True)
 class Office:
@@ -101,34 +99,22 @@ class Handbook:
             raise DataError(f"Invalid handbook JSON: {path}") from exc
 
         if not isinstance(data, list):
-            raise DataError(
-                f"Invalid handbook JSON: expected a list: {path}"
-            )
+            raise DataError(f"Invalid handbook JSON: expected a list: {path}")
 
         if not data:
-            raise DataError(
-                f"Invalid handbook JSON: no rules found: {path}"
-            )
-        
+            raise DataError(f"Invalid handbook JSON: no rules found: {path}")
+
         rules: list[Rule] = []
         seen_ids: set[str] = set()
 
         for index, item in enumerate(data):
             if not isinstance(item, dict):
-                raise DataError(
-                    f"Invalid handbook JSON at index {index}: "
-                    "expected an object."
-                )
+                raise DataError(f"Invalid handbook JSON at index {index}: expected an object.")
 
-            missing_fields = (
-                cls.REQUIRED_FIELDS - item.keys()
-            )
+            missing_fields = cls.REQUIRED_FIELDS - item.keys()
 
             if missing_fields:
-                raise DataError(
-                    f"Invalid handbook JSON at index {index}: "
-                    f"missing fields {sorted(missing_fields)}."
-                )
+                raise DataError(f"Invalid handbook JSON at index {index}: missing fields {sorted(missing_fields)}.")
 
             rule_id = _require_non_empty_string(
                 item["id"],
@@ -149,9 +135,7 @@ class Handbook:
             )
 
             if rule_id in seen_ids:
-                raise DataError(
-                    f"Duplicate handbook rule id: '{rule_id}'."
-                )
+                raise DataError(f"Duplicate handbook rule id: '{rule_id}'.")
 
             seen_ids.add(rule_id)
 
