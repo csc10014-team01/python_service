@@ -4,9 +4,25 @@ import csv
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from assistant_core.errors import DataError
 
+
+def _require_non_empty_string(
+    value: Any,
+    field: str,
+    source: str,
+) -> str:
+    """Validate that a field is a non-empty string."""
+
+    if not isinstance(value, str) or not value.strip():
+        raise DataError(
+            f"Invalid {source}: field '{field}' "
+            "must be a non-empty string."
+        )
+
+    return value.strip()
 
 @dataclass(frozen=True)
 class Office:
@@ -84,14 +100,68 @@ class Handbook:
         except json.JSONDecodeError as exc:
             raise DataError(f"Invalid handbook JSON: {path}") from exc
 
-        rules = [
-            Rule(
-                id=item["id"],
-                title=item["title"],
-                text=item["text"],
+        if not isinstance(data, list):
+            raise DataError(
+                f"Invalid handbook JSON: expected a list: {path}"
             )
-            for item in data
-        ]
+
+        if not data:
+            raise DataError(
+                f"Invalid handbook JSON: no rules found: {path}"
+            )
+        
+        rules: list[Rule] = []
+        seen_ids: set[str] = set()
+
+        for index, item in enumerate(data):
+            if not isinstance(item, dict):
+                raise DataError(
+                    f"Invalid handbook JSON at index {index}: "
+                    "expected an object."
+                )
+
+            missing_fields = (
+                cls.REQUIRED_FIELDS - item.keys()
+            )
+
+            if missing_fields:
+                raise DataError(
+                    f"Invalid handbook JSON at index {index}: "
+                    f"missing fields {sorted(missing_fields)}."
+                )
+
+            rule_id = _require_non_empty_string(
+                item["id"],
+                "id",
+                f"handbook JSON at index {index}",
+            )
+
+            title = _require_non_empty_string(
+                item["title"],
+                "title",
+                f"handbook JSON at index {index}",
+            )
+
+            text = _require_non_empty_string(
+                item["text"],
+                "text",
+                f"handbook JSON at index {index}",
+            )
+
+            if rule_id in seen_ids:
+                raise DataError(
+                    f"Duplicate handbook rule id: '{rule_id}'."
+                )
+
+            seen_ids.add(rule_id)
+
+            rules.append(
+                Rule(
+                    id=rule_id,
+                    title=title,
+                    text=text,
+                )
+            )
 
         return cls(rules)
 
