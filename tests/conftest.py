@@ -32,8 +32,8 @@ def mock_offices():
 def mock_handbook():
     rules = [
         Rule(
+            id="H26-5.3",
             title="Thesis Registration",
-            tittle="Thesis Registration",
             text="Students need at least 100 credits to register for thesis.",
         )
     ]

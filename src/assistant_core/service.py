@@ -1,8 +1,10 @@
 import logging
 
-from assistant_core.errors import ProviderError
+from assistant_core.config import Settings
+from assistant_core.errors import InvalidRequest, ProviderError
+from assistant_core.knowledge import Handbook, OfficeDirectory
 from assistant_core.models import Intent, Message, Response, Source
-from assistant_core.responder import TemplateResponder
+from assistant_core.responder import Responder, TemplateResponder
 from assistant_core.router import route
 from assistant_core.tools import parse_credits, tuition
 
@@ -10,7 +12,7 @@ log = logging.getLogger("assistant_core")
 
 
 class AssistantService:
-    def __init__(self, settings, offices, handbook, responder):
+    def __init__(self, settings: Settings, offices: OfficeDirectory, handbook: Handbook, responder: Responder):
         self.settings = settings
         self.offices = offices
         self.handbook = handbook
@@ -57,7 +59,7 @@ class AssistantService:
                 answer=f"Your tuition is {fee:,} VND.",
                 intent=Intent.FEE,
             )
-        except Exception as exc:  # noqa: BLE001
+        except InvalidRequest as exc:
             return Response(
                 answer=str(exc),
                 intent=Intent.FEE,
