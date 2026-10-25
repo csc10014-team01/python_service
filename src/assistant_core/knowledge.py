@@ -61,8 +61,8 @@ class OfficeDirectory:
 
 @dataclass(frozen=True)
 class Rule:
+    id: str
     title: str
-    tittle: str
     text: str
 
 
@@ -99,6 +99,6 @@ class Handbook:
         query = query.lower()
 
         return next(
-            (rule for rule in self._rules if query in rule.title.lower() or query in rule.content.lower()),
+            (rule for rule in self._rules if query in rule.title.lower() or query in rule.text.lower()),
             None,
         )
