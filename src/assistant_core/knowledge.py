@@ -82,9 +82,9 @@ class Rule:
 
 class Handbook:
     REQUIRED_FIELDS = frozenset(("id", "title", "text"))
+
     def __init__(self, rules: list[Rule]):
         self._rules = rules
-        
 
     @classmethod
     def from_json(cls, path: Path) -> "Handbook":
