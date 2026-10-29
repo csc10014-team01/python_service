@@ -32,7 +32,7 @@ AssistantService.handle(msg: Message) -> Response
   * `session_id`: Định danh phiên làm việc (mặc định: `"local"`).
 * **Output (`Response`)**:
   * `answer`: Câu trả lời hoàn chỉnh dạng chuỗi văn bản.
-  * `intent`: Ý định được phân loại (`GREETING`, `FEE`, `OFFICE`, `RULE`, `UNKNOWN`).
+  * `intent`: Ý định được phân loại (`GREETING`, `HELP`, `FEE`, `OFFICE`, `RULE`, `UNKNOWN`).
   * `sources`: Danh sách nguồn trích dẫn (`list[Source]`).
   * `degraded`: Cờ báo hiệu (`bool`) — `True` nếu hệ thống phải chuyển hướng sang cơ chế dự phòng (fallback).
 
@@ -51,3 +51,7 @@ AssistantService.handle(msg: Message) -> Response
 
 3. **Configuration comes from the environment, documented by `.env.example`**:
    * *Lý do*: Tuân thủ nguyên tắc Factor III trong Twelve-Factor App (Config). Mọi thông số cấu hình và secret được đọc từ môi trường / tệp `.env`. Tệp `.env.example` được lưu trên Git đóng vai trò làm tài liệu hướng dẫn cho các thành viên mà không làm lộ secret.
+
+## Help extension (Lab 3 H1)
+
+The router recognizes normalized `help` and `/help` commands as `Intent.HELP`. `AssistantService.handle()` returns a local capability description using the existing `Response` contract, with empty sources and `degraded=False`. The command does not call knowledge lookup or the responder, and does not introduce a new dependency. Ordinary questions containing the word `help` retain their existing routing. The CLI's existing stdout/stderr separation and metadata logging apply to help as well.

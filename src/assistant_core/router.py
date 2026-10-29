@@ -7,6 +7,9 @@ def route(text: str, office_names: set[str]) -> Intent:
     """Classify a user question using simple rules."""
     normalized = text.lower().strip().rstrip("?!.")
 
+    if normalized in {"help", "/help"}:
+        return Intent.HELP
+
     if normalized in GREETINGS:
         return Intent.GREETING
 
