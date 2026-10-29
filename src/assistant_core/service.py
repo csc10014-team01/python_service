@@ -10,6 +10,13 @@ from assistant_core.tools import parse_credits, tuition
 
 log = logging.getLogger("assistant_core")
 
+HELP_TEXT = (
+    "I can help with:\n"
+    "- Offices: ask where the library is.\n"
+    '- Tuition: ask "tuition for 18 credits and 2 retake".\n'
+    "- Handbook rules: ask about thesis registration or exam absence."
+)
+
 
 class AssistantService:
     def __init__(self, settings: Settings, offices: OfficeDirectory, handbook: Handbook, responder: Responder):
@@ -21,6 +28,9 @@ class AssistantService:
 
     def handle(self, msg: Message) -> Response:
         intent = route(msg.text, self.offices.names)
+
+        if intent is Intent.HELP:
+            return Response(answer=HELP_TEXT, intent=intent)
 
         if intent is Intent.GREETING:
             return Response(
