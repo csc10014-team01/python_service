@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class Intent(str, Enum):
     GREETING = "greeting"
+    HELP = "help"
     FEE = "fee"
     OFFICE = "office"
     RULE = "rule"
