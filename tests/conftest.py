@@ -20,6 +20,11 @@ def mock_settings():
 
 
 @pytest.fixture
+def settings(mock_settings):
+    return mock_settings
+
+
+@pytest.fixture
 def mock_offices():
     data = {
         "training": Office(name="Training Office", room="A.101", hours="08:00-17:00"),
