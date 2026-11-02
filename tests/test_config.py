@@ -19,6 +19,12 @@ def clean_environment(monkeypatch):
         "RETAKE_MULTIPLIER",
         "MAX_CREDITS",
         "LOG_LEVEL",
+        "API_ADMIN_KEY",
+        "WEATHER_URL",
+        "WEATHER_TIMEOUT_S",
+        "CAMPUS_LAT",
+        "CAMPUS_LON",
+        "RATE_LIMIT_PER_MIN",
     ):
         monkeypatch.delenv(name, raising=False)
 

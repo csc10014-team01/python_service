@@ -244,3 +244,6 @@ data/private/
 # OS junk files
 .DS_Store
 Thumbs.db
+
+# Lab04 reference materials are kept locally; the shared project lives at the root.
+/lab04/
