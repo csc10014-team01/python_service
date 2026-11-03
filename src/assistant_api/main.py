@@ -14,14 +14,12 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from assistant_api import weather
 from assistant_api.ratelimit import RateLimiter
 from assistant_api.schemas import ChatRequest, ChatResponse, ErrorResponse, FeedbackIn, FeedbackOut, Weather
 from assistant_api.weather import ExternalServiceError, WeatherClient  # noqa: F401 -- used by T4
 from assistant_core.config import Settings, load_settings
 from assistant_core.models import Message  # noqa: F401 -- used by T1
 from assistant_core.service import AssistantService, build_service
-
 
 
 def create_app(
