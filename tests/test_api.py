@@ -89,6 +89,7 @@ def test_offices_returns_200(client):
 
     assert response.status_code == 200
 
+
 def test_offices_contains_library(client):
     response = client.get("/v1/offices")
 
