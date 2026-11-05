@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +13,13 @@ OK_JSON = {"current": {"time": "2026-10-05T09:00", "temperature_2m": 31.2, "weat
 def weather_with(handler) -> WeatherClient:
     transport = httpx.MockTransport(handler)
     return WeatherClient("https://example.test/forecast", 10.76, 106.68, retries=1, transport=transport)
+
+
+def client_with_address(app, address) -> TestClient:
+    async def with_address(scope, receive, send):
+        await app({**scope, "client": address}, receive, send)
+
+    return TestClient(with_address)
 
 
 @pytest.fixture
@@ -37,10 +46,55 @@ def test_chat_validation_error(client):
     assert r.status_code == 422 and r.json()["error"]["code"] == "invalid_request"
 
 
-@pytest.mark.skip(reason="BONUS task — remove this line when you add rate limiting")
 def test_rate_limit(client):
-    codes = [client.post("/v1/chat", json={"message": "hi"}).status_code for _ in range(6)]
-    assert codes[-1] == 429
+    for _ in range(5):
+        assert client.post("/v1/chat", json={"message": "hi"}).status_code == 200
+
+    response = client.post("/v1/chat", json={"message": "hi"})
+    assert response.status_code == 429
+    assert response.json() == {"error": {"code": "too_many_requests", "message": "Too many requests"}}
+
+
+def test_rate_limit_is_per_client(client):
+    first = client_with_address(client.app, ("192.0.2.1", 12345))
+    second = client_with_address(client.app, ("192.0.2.2", 12345))
+    for _ in range(5):
+        assert first.post("/v1/chat", json={"message": "hi"}).status_code == 200
+    assert first.post("/v1/chat", json={"message": "hi"}).status_code == 429
+
+    assert second.post("/v1/chat", json={"message": "hi"}).status_code == 200
+    # A different connection from the same IP still shares the limit.
+    same_ip = client_with_address(client.app, ("192.0.2.1", 54321))
+    assert same_ip.post("/v1/chat", json={"message": "hi"}).status_code == 429
+
+
+def test_rate_limit_without_client_address(client):
+    anonymous = client_with_address(client.app, None)
+    codes = [anonymous.post("/v1/chat", json={"message": "hi"}).status_code for _ in range(6)]
+    assert codes == [200] * 5 + [429]
+
+
+def test_rate_limit_expires_after_one_minute(client, monkeypatch):
+    now = [100.0]
+    monkeypatch.setattr("assistant_api.ratelimit.time", SimpleNamespace(monotonic=lambda: now[0]))
+    for _ in range(5):
+        assert client.post("/v1/chat", json={"message": "hi"}).status_code == 200
+
+    now[0] += 59
+    assert client.post("/v1/chat", json={"message": "hi"}).status_code == 429
+    now[0] += 2
+    assert client.post("/v1/chat", json={"message": "hi"}).status_code == 200
+
+
+def test_rate_limit_only_counts_valid_chat_requests(client):
+    for _ in range(6):
+        assert client.post("/v1/chat", json={"message": ""}).status_code == 422
+        assert client.get("/health").status_code == 200
+    for _ in range(5):
+        assert client.post("/v1/chat", json={"message": "hi"}).status_code == 200
+    assert client.post("/v1/chat", json={"message": "hi"}).status_code == 429
+    assert client.get("/health").status_code == 200
+    assert client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1}).status_code == 201
 
 
 def test_feedback_roundtrip(client):
