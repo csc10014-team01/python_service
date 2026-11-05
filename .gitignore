@@ -245,5 +245,6 @@ data/private/
 .DS_Store
 Thumbs.db
 
-# Lab04 reference materials are kept locally; the shared project lives at the root.
-/lab04/
+# Keep Lab04 reference materials local; include the individual Part C exercises.
+/lab04/*
+!/lab04/practice/
