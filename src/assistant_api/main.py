@@ -65,39 +65,29 @@ def create_app(
         responses={422: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
     )
     def chat(req: ChatRequest, request: Request) -> ChatResponse:
-        # BONUS: rate limiting (see tutorial Part F). Leave it for later.
-        # TODO T1 (2 lines):
-        #   1. resp = service.handle(Message(text=req.message, session_id=req.session_id))
-        #   2. return ChatResponse(**resp.model_dump(), request_id=uuid.uuid4().hex[:12])
         resp = service.handle(Message(text=req.message, session_id=req.session_id))
         return ChatResponse(**resp.model_dump(), request_id=uuid.uuid4().hex[:12])
 
     @app.post("/v1/feedback", response_model=FeedbackOut, status_code=201, tags=["feedback"])
     def add_feedback(fb: FeedbackIn) -> FeedbackOut:
-        # TODO T2 (3 lines):
-        #   1. item = FeedbackOut(**fb.model_dump(), id=len(feedback_store) + 1, created_at=datetime.now(timezone.utc))
-        #   2. add item to feedback_store
-        #   3. return item
         item = FeedbackOut(**fb.model_dump(), id=len(feedback_store) + 1, created_at=datetime.now(timezone.utc))
         feedback_store.append(item)
         return item
 
     @app.get("/v1/feedback", response_model=list[FeedbackOut], tags=["feedback"], dependencies=[Depends(require_admin)])
     def list_feedback() -> list[FeedbackOut]:
-        # TODO T3 (1 line): return the list. The API-key check is already done by `require_admin` above.
         return feedback_store
 
     @app.get("/v1/weather", response_model=Weather, tags=["external"], responses={503: {"model": ErrorResponse}})
     def campus_weather() -> Weather:
-        # TODO T4 (4 lines): call weather.current() inside try/except.
-        #   If ExternalServiceError happens, raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
-        #   "Weather service unavailable") from None
         try:
             return weather.current()
         except ExternalServiceError:
-            raise HTTPException(
-                status.HTTP_503_SERVICE_UNAVAILABLE,
-                "Weather service unavailable",
-            ) from None
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Weather service unavailable") from None
+
+    @app.get("/v1/offices")
+    def list_offices():
+        return [o.__dict__ for o in service.offices.all()]
+
 
     return app
