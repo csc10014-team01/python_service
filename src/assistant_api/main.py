@@ -89,5 +89,4 @@ def create_app(
     def list_offices():
         return [o.__dict__ for o in service.offices.all()]
 
-
     return app
