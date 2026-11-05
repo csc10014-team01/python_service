@@ -1,7 +1,6 @@
 # Study Assistant - Python Service
 
-Backend trợ lý học tập của nhóm CSC10014. Lab03 cung cấp phần xử lý nghiệp vụ
-`assistant_core`; Lab04 bổ sung REST API bằng FastAPI trong `assistant_api`.
+Backend trợ lý học tập của nhóm CSC10014. Lab03 cung cấp phần xử lý nghiệp vụ `assistant_core`; Lab04 bổ sung REST API bằng FastAPI trong `assistant_api`.
 
 Nhóm phát triển Lab04 trực tiếp trong `src/` và `tests/` ở gốc repo.
 Bộ bài warm-up và code mẫu trong `lab04/` chỉ giữ trên máy để tham khảo,
@@ -68,9 +67,10 @@ Giữ terminal mở để server nhận request. Nhấn `Ctrl+C` để dừng.
 Muốn chạy lệnh khác trong lúc server hoạt động, mở Git Bash thứ hai và kích hoạt
 `.venv` tại gốc repo.
 
-### Trạng thái Lab04 ở giai đoạn setup
+### Trạng thái Lab04
 
-`/health` và trang `/docs` đã có sẵn. Các task sau được nhóm hoàn thiện tiếp:
+T1–T4, H1 và phần F đã được triển khai. `/health` dùng để kiểm tra server;
+`/docs` cung cấp giao diện Swagger để thử các endpoint.
 
 | Phần | Chức năng |
 |---|---|
@@ -80,21 +80,30 @@ Muốn chạy lệnh khác trong lúc server hoạt động, mở Git Bash thứ
 | F | Rate limiting cho chat, trả `429` khi vượt giới hạn |
 | H1 | `GET /v1/offices`, danh sách sắp xếp theo tên và hai test |
 
-Endpoint còn `NotImplementedError` có thể trả `500` khi gọi; đó là phần task chưa
-hoàn thành. Sau khi hoàn thiện feedback, `GET /v1/feedback` yêu cầu header
+`GET /v1/feedback` yêu cầu header
 `X-API-Key` khớp với `API_ADMIN_KEY` trong `.env`.
+Feedback lưu trong bộ nhớ và mất khi server khởi động lại.
+
+`GET /v1/offices` trả danh sách văn phòng được sắp xếp theo tên, mỗi mục gồm
+`name`, `room` và `hours`.
+
+`POST /v1/chat` giới hạn mặc định 30 request hợp lệ mỗi phút cho mỗi IP;
+cấu hình bằng `RATE_LIMIT_PER_MIN`. Khi vượt giới hạn, server trả `429`.
+Bộ đếm lưu trong bộ nhớ của từng instance ứng dụng và được xóa khi khởi động lại.
 
 ## 4. Chạy test
 
 Mọi lệnh bên dưới chạy từ gốc repo, trong `.venv` đã cài dependencies.
 
-### Kiểm tra setup hiện tại
+### Chạy toàn bộ test
 
-Liệt kê test để kiểm tra việc thu thập và import; lệnh này chưa chạy test:
+Chạy cả core Lab03 và API Lab04:
 
 ```bash
-python -m pytest --collect-only -q
+python -m pytest -q
 ```
+
+### Chạy riêng từng nhóm
 
 Chạy test core Lab03:
 
@@ -102,28 +111,20 @@ Chạy test core Lab03:
 python -m pytest -q --ignore=tests/test_api.py
 ```
 
-Chạy các test API không cần hoàn thành T1-T4:
+Chạy toàn bộ test API Lab04:
 
 ```bash
-python -m pytest -q tests/test_api.py -k "health or validation_error or rating_out_of_range or stale_cache"
-```
-
-CI ở giai đoạn setup chạy hai nhóm kiểm tra trên. `deselected` nghĩa là test
-không được chọn bởi bộ lọc, không phải test thất bại.
-
-### Khi hoàn thành Lab04
-
-```bash
-python -m pytest -q
+python -m pytest -q tests/test_api.py
 ```
 
 Các test API dùng `TestClient` và mock weather, không cần mở server hoặc gọi
-dịch vụ thời tiết thật. Test rate limiting đang được skip trong starter;
-người làm phần F bỏ dấu skip sau khi triển khai chức năng.
-Người làm H1 bổ sung hai test: endpoint trả `200` và danh sách có `Library`.
+dịch vụ thời tiết thật. Bộ test bao gồm Chat, kiểm tra dữ liệu đầu vào, Feedback,
+xác thực admin, Weather, Offices và Rate limiting. Test Rate limiting đã được bật,
+kiểm tra giới hạn theo IP, địa chỉ client bị thiếu và thời gian hết hạn bộ đếm.
 
-Khi D, F và H1 hoàn thành, cập nhật `.github/workflows/ci.yml` để thay hai bước
-kiểm tra setup bằng bước chạy toàn bộ `python -m pytest -q`.
+Workflow `.github/workflows/ci.yml` chạy riêng hai nhóm core Lab03 và API Lab04
+khi push lên `main` hoặc tạo/cập nhật PR hướng vào `main`. Workflow cũng kiểm tra
+Ruff, định dạng code và dấu conflict còn sót.
 `testpaths = ["tests"]` trong `pyproject.toml` giữ nguyên để không quét test mẫu
 còn lại trong `lab04/`.
 
@@ -136,7 +137,7 @@ python -m ruff format --check src/ tests/
 
 ## 5. Kiểm thử thủ công với curl hoặc Postman
 
-Sau khi các endpoint tương ứng được triển khai, mở server theo mục 3.
+Mở server theo mục 3.
 Trong Git Bash thứ hai, tại gốc repo, chạy:
 
 ```bash
@@ -149,9 +150,55 @@ script để khớp với key trong `.env`. Script không tự đọc `.env`.
 Script in mã HTTP để đối chiếu thủ công, không thay thế bộ test pytest.
 Weather thật có thể trả `503` khi dịch vụ ngoài không truy cập được.
 
+Script kiểm tra Health, Chat, Feedback, xác thực admin, Weather, đường dẫn không
+tồn tại và Offices. Với Offices, kiểm tra mã `200`, danh sách có `Library` và
+các văn phòng được sắp xếp theo tên. Khi chạy lại nhiều lần trong một phút,
+Chat có thể trả `429` do giới hạn request; chờ hơn một phút hoặc khởi động lại
+server để kiểm tra lại từ đầu.
+
+### Kiểm tra Rate limiting bằng curl
+
+Dùng một server mới ở cổng 8001 để có bộ đếm ban đầu trống. Trong Git Bash thứ
+nhất, tại gốc repo và sau khi kích hoạt `.venv`, chạy nguyên dòng sau:
+
+```bash
+RATE_LIMIT_PER_MIN=5 LLM_PROVIDER=stub python -m uvicorn assistant_api.main:create_app --factory --port 8001
+```
+
+Đặt `RATE_LIMIT_PER_MIN` ở terminal khởi động server; đặt biến ở terminal chạy
+curl không thay đổi cấu hình server. Nếu cổng 8001 đã được sử dụng, dừng server
+cũ bằng `Ctrl+C` trong terminal của nó trước khi chạy lệnh trên.
+
+Giữ server chạy. Trong Git Bash thứ hai, gửi sáu request liên tiếp:
+
+```bash
+for i in {1..6}; do
+  printf "Request %s: " "$i"
+  curl -s -o /dev/null -w "%{http_code}\n" \
+    -X POST http://127.0.0.1:8001/v1/chat \
+    -H "Content-Type: application/json" \
+    -d '{"message":"hi"}'
+done
+```
+
+Kết quả mong đợi là năm request đầu trả `200`, request thứ sáu trả `429`.
+Chạy trên server vừa khởi động và không gửi thêm request Chat trước phép thử.
+Muốn lặp lại từ đầu, dừng rồi khởi động lại server. Lệnh cấu hình giới hạn 5
+chỉ áp dụng cho lần chạy đó, không sửa giá trị trong `.env`.
+
+### Postman và minh chứng PR
+
 Có thể nhập `api-tests/study-assistant.postman_collection.json` vào Postman,
 rồi chỉnh các biến `base` và `admin_key` cho phù hợp.
-Đính kèm ảnh `/docs` gọi `POST /v1/chat` thành công vào PR hoàn thiện Lab04.
+
+Trên server cổng 8000, mở `/docs`, chọn `POST /v1/chat` → `Try it out`, gửi:
+
+```json
+{"message": "tuition for 18 credits and 2 retake", "session_id": "demo"}
+```
+
+Chụp ảnh thấy mã `200`, câu trả lời và `request_id`. Đính kèm ảnh này, kết quả
+pytest, script curl và phép thử Rate limiting vào PR hoàn thiện Lab04.
 
 ## 6. Chạy CLI Lab03
 
