@@ -30,6 +30,8 @@ class Settings(BaseModel):
     campus_lat: float = Field(default=10.7626, ge=-90, le=90, allow_inf_nan=False)
     campus_lon: float = Field(default=106.6822, ge=-180, le=180, allow_inf_nan=False)
     rate_limit_per_min: int = Field(default=30, gt=0)
+    database_url: str = "sqlite:///assistant.db"
+    session_salt: str = Field(default="dev-salt", repr=False)
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -70,6 +72,8 @@ def load_settings(env_file: str | Path | None = ".env") -> Settings:
             campus_lat=os.getenv("CAMPUS_LAT", "10.7626"),
             campus_lon=os.getenv("CAMPUS_LON", "106.6822"),
             rate_limit_per_min=os.getenv("RATE_LIMIT_PER_MIN", "30"),
+            database_url=os.getenv("DATABASE_URL", "sqlite:///assistant.db"),
+            session_salt=os.getenv("SESSION_SALT", "dev-salt"),
         )
     except ValidationError as exc:
         fields = sorted({".".join(map(str, error["loc"])) or "settings" for error in exc.errors()})
