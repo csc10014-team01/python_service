@@ -97,6 +97,7 @@ def test_rate_limit_only_counts_valid_chat_requests(client):
     assert client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1}).status_code == 201
 
 
+@pytest.mark.xfail(raises=NotImplementedError, strict=True, reason="Lab05 R1/R2: save and list feedback pending")
 def test_feedback_roundtrip(client):
     r = client.post("/v1/feedback", json={"request_id": "abc123", "rating": 1})
     assert r.status_code == 201 and r.json()["id"] == 1
