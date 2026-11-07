@@ -102,12 +102,12 @@ class Repository:
         with Session(self.engine) as db:
             exists = db.exec(select(Interaction).where(Interaction.request_id == request_id)).first()
             if exists is None:
-                return None  
+                return None
             fb = Feedback(request_id=request_id, rating=rating, comment=comment)
-            db.add(fb) 
-            db.commit() 
+            db.add(fb)
+            db.commit()
             db.refresh(fb)
-            return fb   
+            return fb
 
     def list_feedback(self, limit: int = 100) -> list[Feedback]:
         # TODO R2: open a Session and return the newest feedback first, at most `limit` rows.
