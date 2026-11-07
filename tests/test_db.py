@@ -1,4 +1,3 @@
-import pytest
 from sqlmodel import Session, select
 
 from assistant_api.db import ChatSession, Interaction, Repository, hash_session, init_db, make_engine

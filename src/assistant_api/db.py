@@ -104,7 +104,9 @@ class Repository:
             if exists is None:
                 return None  
             fb = Feedback(request_id=request_id, rating=rating, comment=comment)
-            db.add(fb); db.commit(); db.refresh(fb)
+            db.add(fb) 
+            db.commit() 
+            db.refresh(fb)
             return fb   
 
     def list_feedback(self, limit: int = 100) -> list[Feedback]:
