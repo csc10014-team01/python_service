@@ -32,6 +32,19 @@
     },
     {
       "name": "chat - fee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    pm.collectionVariables.set(\"request_id\", pm.response.json().request_id);",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -130,7 +143,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\"request_id\": \"abc123\", \"rating\": 1}"
+          "raw": "{\"request_id\": \"{{request_id}}\", \"rating\": 1}"
         }
       }
     },
