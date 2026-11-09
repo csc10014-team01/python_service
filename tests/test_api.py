@@ -100,7 +100,6 @@ def test_rate_limit_expires_after_one_minute(client, monkeypatch):
     assert client.post("/v1/chat", json={"message": "hi"}).status_code == 200
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=True, reason="Lab05 R1: feedback persistence pending")
 def test_rate_limit_only_counts_valid_chat_requests(client):
     for _ in range(6):
         assert client.post("/v1/chat", json={"message": ""}).status_code == 422
