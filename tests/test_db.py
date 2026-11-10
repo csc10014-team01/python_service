@@ -1,4 +1,3 @@
-import pytest
 from sqlmodel import Session, select
 
 from assistant_api.db import ChatSession, Interaction, Repository, hash_session, init_db, make_engine
@@ -32,7 +31,6 @@ def test_feedback_requires_existing_interaction():
     assert repo.add_feedback("missing", 1, None) is None
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=True, reason="Lab05 R1: feedback persistence pending")
 def test_feedback_saves_existing_interaction():
     repo, _ = make_repo()
     repo.record_interaction("s", "r1", "fee", None, True, False, 1.0)
