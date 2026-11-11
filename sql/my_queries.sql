@@ -1,3 +1,10 @@
+-- F2: Average time taken per intent, rounded to 1 decimal place
+SELECT
+    intent,
+    ROUND(AVG(latency_ms), 1) AS avg_latency
+FROM interaction
+GROUP BY intent;
+
 -- F3: Which topics got the most thumbs-down?
 SELECT
     i.topic,
