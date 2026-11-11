@@ -10,9 +10,24 @@ hr "chat fee (expect 200)";            curl -s -w "  [%{http_code}]\n" -X POST "
 hr "chat rule with source (200)";      curl -s -w "  [%{http_code}]\n" -X POST "$BASE/v1/chat" -H "Content-Type: application/json" -d '{"message":"can I register my thesis with 118 credits"}'
 hr "chat empty (expect 422)";          curl -s -w "  [%{http_code}]\n" -X POST "$BASE/v1/chat" -H "Content-Type: application/json" -d '{"message":""}'
 hr "chat wrong type (expect 422)";     curl -s -w "  [%{http_code}]\n" -X POST "$BASE/v1/chat" -H "Content-Type: application/json" -d '{"message":123}'
-hr "feedback (expect 201)";            curl -s -w "  [%{http_code}]\n" -X POST "$BASE/v1/feedback" -H "Content-Type: application/json" -d '{"request_id":"abc123","rating":1,"comment":"clear answer"}'
+hr "feedback (expect 201)"
+
+if ! REQUEST_ID=$(curl -fsS "$BASE/v1/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"hi","session_id":"demo"}' |
+  python -c 'import json, sys; print(json.load(sys.stdin)["request_id"])'); then
+  echo "Không lấy được request_id từ /v1/chat" >&2
+  exit 1
+fi
+
+curl -sS -w "  [%{http_code}]\n" "$BASE/v1/feedback" \
+  -H "Content-Type: application/json" \
+  -d "{\"request_id\":\"$REQUEST_ID\",\"rating\":1,\"comment\":\"clear answer\"}"
+
 hr "feedback bad rating (422)";        curl -s -w "  [%{http_code}]\n" -X POST "$BASE/v1/feedback" -H "Content-Type: application/json" -d '{"request_id":"abc123","rating":7}'
 hr "list feedback no key (401)";       curl -s -w "  [%{http_code}]\n" "$BASE/v1/feedback"
 hr "list feedback with key (200)";     curl -s -w "  [%{http_code}]\n" -H "X-API-Key: $ADMIN" "$BASE/v1/feedback"
 hr "weather (200, or 503 if down)";    curl -s -w "  [%{http_code}]\n" -m 10 "$BASE/v1/weather"
 hr "unknown route (404)";              curl -s -w "  [%{http_code}]\n" "$BASE/v1/nope"
+hr "offices (expect 200)"
+curl -s -w "  [%{http_code}]\n" "$BASE/v1/offices"

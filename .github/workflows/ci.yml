@@ -34,8 +34,8 @@ jobs:
       - name: Run core tests
         run: python -m pytest -q --ignore=tests/test_api.py
 
-      - name: Check API setup
-        run: python -m pytest -q tests/test_api.py -k "health or validation_error or rating_out_of_range or stale_cache"
+      - name: Run Lab04 API tests
+        run: python -m pytest -q tests/test_api.py
 
       - name: Check for merge conflict markers
         run: "! git grep -n -E '^(<<<<<<<|>>>>>>>)'"
