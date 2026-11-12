@@ -1,3 +1,11 @@
+-- F1: How many questions per intent?
+SELECT
+    intent,
+    COUNT(*) AS requests
+FROM interaction
+GROUP BY intent
+ORDER BY requests DESC;
+
 -- F2: Average time taken per intent, rounded to 1 decimal place
 SELECT
     intent,
