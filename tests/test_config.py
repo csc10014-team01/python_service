@@ -15,6 +15,13 @@ def clean_environment(monkeypatch):
         "ASSISTANT_DATA_DIR",
         "LLM_PROVIDER",
         "LLM_API_KEY",
+        "LLM_TIMEOUT_S",
+        "LLM_MODEL",
+        "LLM_BASE_URL",
+        "KB_DIR",
+        "RETRIEVAL_KIND",
+        "RETRIEVAL_MIN_SCORE",
+        "PROMPT_VERSION",
         "CREDIT_RATE_VND",
         "RETAKE_MULTIPLIER",
         "MAX_CREDITS",
@@ -25,6 +32,8 @@ def clean_environment(monkeypatch):
         "CAMPUS_LAT",
         "CAMPUS_LON",
         "RATE_LIMIT_PER_MIN",
+        "DATABASE_URL",
+        "SESSION_SALT",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -90,12 +99,38 @@ def test_missing_dotenv_is_optional(tmp_path):
 
 
 @pytest.mark.parametrize("key", [None, "", "   "])
-def test_non_stub_provider_requires_api_key(monkeypatch, key):
-    monkeypatch.setenv("LLM_PROVIDER", "example-provider")
+def test_openai_provider_requires_api_key(monkeypatch, key):
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
     if key is not None:
         monkeypatch.setenv("LLM_API_KEY", key)
     with pytest.raises(ConfigError, match="LLM_API_KEY is required"):
         load_settings(env_file=None)
+
+
+@pytest.mark.parametrize("provider", ["stub", "template", "ollama"])
+def test_local_providers_work_without_api_key(monkeypatch, provider):
+    monkeypatch.setenv("LLM_PROVIDER", provider)
+    settings = load_settings(env_file=None)
+    assert settings.llm_provider == provider
+    assert settings.llm_api_key is None
+
+
+def test_loads_rag_configuration_from_environment(monkeypatch):
+    monkeypatch.setenv("KB_DIR", "custom-kb")
+    monkeypatch.setenv("RETRIEVAL_KIND", "tfidf")
+    monkeypatch.setenv("RETRIEVAL_MIN_SCORE", "0.2")
+    monkeypatch.setenv("LLM_TIMEOUT_S", "12")
+    monkeypatch.setenv("LLM_MODEL", "custom-model")
+    monkeypatch.setenv("LLM_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("PROMPT_VERSION", "answer_v2")
+    settings = load_settings(env_file=None)
+    assert settings.kb_dir == Path("custom-kb")
+    assert settings.retrieval_kind == "tfidf"
+    assert settings.retrieval_min_score == 0.2
+    assert settings.llm_timeout_s == 12
+    assert settings.llm_model == "custom-model"
+    assert settings.llm_base_url == "http://localhost:11434"
+    assert settings.prompt_version == "answer_v2"
 
 
 def test_api_key_is_hidden_from_settings_representation(monkeypatch):

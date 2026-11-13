@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from assistant_api.db import Repository, init_db, make_engine
 from assistant_api.main import create_app
 from assistant_api.weather import WeatherClient
+from assistant_core.service import build_service
 
 OK_JSON = {"current": {"time": "2026-10-05T09:00", "temperature_2m": 31.2, "weather_code": 3, "wind_speed_10m": 8.5}}
 
@@ -46,6 +47,20 @@ def client(settings, service, repo):
 def test_health(client):
     r = client.get("/health")
     assert r.status_code == 200 and r.json()["status"] == "ok"
+
+
+@pytest.mark.parametrize(("provider", "expected_path"), [("stub", "llm"), ("template", "retrieval")])
+def test_chat_rag_metadata(settings, repo, provider, expected_path):
+    settings = settings.model_copy(update={"llm_provider": provider, "llm_api_key": None})
+    app = create_app(settings, build_service(settings), repo=repo)
+    with TestClient(app) as client:
+        response = client.post("/v1/chat", json={"message": "I lost my student card"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["path"] == expected_path
+    assert body["sources"][0]["id"] == "S26#3"
+    assert body["escalate"] is False
+    assert body["confidence"] == (0.7 if provider == "stub" else None)
 
 
 def test_chat_fee(client):
