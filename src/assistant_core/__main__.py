@@ -3,11 +3,9 @@ import logging
 import time
 
 from assistant_core.config import load_settings
-from assistant_core.knowledge import Handbook, OfficeDirectory
 from assistant_core.logging_setup import setup_logging
 from assistant_core.models import Message
-from assistant_core.responder import StubLLMResponder
-from assistant_core.service import AssistantService
+from assistant_core.service import build_service
 
 
 def main() -> None:
@@ -20,11 +18,7 @@ def main() -> None:
     setup_logging(settings.log_level)
     log = logging.getLogger("assistant_core")
 
-    offices = OfficeDirectory.from_csv(settings.data_dir / "offices.csv")
-    handbook = Handbook.from_json(settings.data_dir / "handbook.json")
-    responder = StubLLMResponder()
-
-    service = AssistantService(settings, offices, handbook, responder)
+    service = build_service(settings)
 
     start = time.perf_counter()
     msg = Message(text=args.text, session_id=args.session)
@@ -41,6 +35,8 @@ def main() -> None:
         },
     )
     print(response.answer)
+    for source in response.sources:
+        print(f"  source: {source.id} — {source.title}")
 
 
 if __name__ == "__main__":

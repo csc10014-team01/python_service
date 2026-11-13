@@ -18,6 +18,13 @@ class Settings(BaseModel):
     data_dir: Path = Path("data")
     llm_provider: str = Field(default="stub", min_length=1)
     llm_api_key: str | None = Field(default=None, repr=False)
+    llm_timeout_s: float = Field(default=5.0, gt=0, allow_inf_nan=False)
+    llm_model: str = "llama3.2"
+    llm_base_url: str | None = None
+    kb_dir: Path = Path("data/kb")
+    retrieval_kind: Literal["bm25", "tfidf", "hybrid"] = "bm25"
+    retrieval_min_score: float = Field(default=2.0, ge=0, allow_inf_nan=False)
+    prompt_version: str = "answer_v1"
     credit_rate_vnd: int = Field(default=450_000, gt=0)
     retake_multiplier: float = Field(default=1.5, gt=0, allow_inf_nan=False)
     max_credits: int = Field(default=30, gt=0)
@@ -40,8 +47,8 @@ class Settings(BaseModel):
 
     @model_validator(mode="after")
     def require_provider_key(self) -> "Settings":
-        if self.llm_provider != "stub" and not self.llm_api_key:
-            raise ValueError("LLM_API_KEY is required when LLM_PROVIDER is not 'stub'")
+        if self.llm_provider == "openai" and not self.llm_api_key:
+            raise ValueError("LLM_API_KEY is required when LLM_PROVIDER is 'openai'")
         return self
 
 
@@ -62,6 +69,13 @@ def load_settings(env_file: str | Path | None = ".env") -> Settings:
             data_dir=os.getenv("ASSISTANT_DATA_DIR", "data"),
             llm_provider=os.getenv("LLM_PROVIDER", "stub"),
             llm_api_key=os.getenv("LLM_API_KEY") or None,
+            llm_timeout_s=os.getenv("LLM_TIMEOUT_S", "5"),
+            llm_model=os.getenv("LLM_MODEL", "llama3.2"),
+            llm_base_url=os.getenv("LLM_BASE_URL") or None,
+            kb_dir=os.getenv("KB_DIR", "data/kb"),
+            retrieval_kind=os.getenv("RETRIEVAL_KIND", "bm25"),
+            retrieval_min_score=os.getenv("RETRIEVAL_MIN_SCORE", "2.0"),
+            prompt_version=os.getenv("PROMPT_VERSION", "answer_v1"),
             credit_rate_vnd=os.getenv("CREDIT_RATE_VND", "450000"),
             retake_multiplier=os.getenv("RETAKE_MULTIPLIER", "1.5"),
             max_credits=os.getenv("MAX_CREDITS", "30"),
@@ -78,5 +92,5 @@ def load_settings(env_file: str | Path | None = ".env") -> Settings:
     except ValidationError as exc:
         fields = sorted({".".join(map(str, error["loc"])) or "settings" for error in exc.errors()})
         if any("LLM_API_KEY is required" in error["msg"] for error in exc.errors()):
-            raise ConfigError("LLM_API_KEY is required when LLM_PROVIDER is not 'stub'") from None
+            raise ConfigError("LLM_API_KEY is required when LLM_PROVIDER is 'openai'") from None
         raise ConfigError(f"Invalid configuration: {', '.join(fields)}") from None
