@@ -86,7 +86,11 @@ def test_unexpected_fee_error_is_not_hidden(service, monkeypatch):
 def test_cli_uses_json_logging(monkeypatch, capsys, mock_settings):
     mock_settings.data_dir = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr("assistant_core.__main__.load_settings", lambda: mock_settings)
-    monkeypatch.setattr(sys, "argv", ["assistant_core", "thesis registration", "--session", "test-session"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["assistant_core", "can I register my thesis with 118 credits", "--session", "test-session"],
+    )
     logger = logging.getLogger("assistant_core")
     old_handlers, old_level, old_propagate = logger.handlers[:], logger.level, logger.propagate
     logger.handlers = []
