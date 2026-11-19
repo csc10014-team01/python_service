@@ -54,3 +54,27 @@ Chưa chạy evaluation trên 25 câu hỏi.
 ### Giải thích — 1 câu
 
 The five additional questions cover normal knowledge-base queries and unsupported or privacy-related requests, allowing us to evaluate the assistant's retrieval accuracy and ability to abstain safely; their actual performance will be determined after running the evaluation.
+
+### H1.3 — Cmai, kết quả thực tế của E21–E23
+
+Ba case dưới đây có `category: "normal"` và là các case E21–E23 thực tế trong `eval/cases.jsonl`. Lần chạy này gồm 23 case.
+
+| ID | Câu hỏi | Expected source | Căn cứ chọn câu |
+|---|---|---|---|
+| E21 | Under what condition can borrowed books be renewed online? | `S26#1` | Mục 1 của `services_2026.md` cho phép gia hạn trực tuyến một lần nếu chưa có ai khác đặt trước. E15 hỏi thời hạn mượn. |
+| E22 | What is the regular rate per credit for the 2026 academic year? | `F26#1` | Mục 1 của `fees_2026.md` ghi mức 450.000 VND/tín chỉ cho chương trình chính quy. E02 hỏi phí học lại và E03 yêu cầu tính tổng. |
+| E23 | How many semesters can a leave of absence last? | `H26#8.1` | Mục 8.1 của `handbook_2026.md` quy định thời gian bảo lưu tối đa hai học kỳ. E11 hỏi hoàn học phí khi bảo lưu. |
+
+`load_folder()` xác nhận cả ba ID. Chunker ghép `doc_id` trong metadata với số ở đầu tiêu đề mục theo dạng `doc_id#number`.
+
+Chạy `python eval/compare_paths.py` từ gốc repo bằng Python trong `.venv`, với `PYTHONPATH=src` và `LLM_PROVIDER=stub`. Chỉ mục BM25 dùng ngưỡng 2.0.
+
+| Path | Correct (toàn bộ) | Abstain ok | p50 ms | Max ms | E21 | E22 | E23 |
+|---|---:|---:|---:|---:|---|---|---|
+| deterministic | 7/23 | 5/5 | 0.0 | 0.8 | Fail | Fail | Fail |
+| retrieval | 19/23 | 4/5 | 0.0 | 0.2 | Pass | Pass | Pass |
+| llm (stub) | 19/23 | 4/5 | 0.2 | 0.6 | Pass | Pass | Pass |
+
+- **Deterministic:** Cả ba câu đi vào nhánh quy định. `NoAnswer.search()` trả danh sách rỗng, nên `RagAnswerer` từ chối và trả `sources=[]`. Cả ba thiếu nguồn kỳ vọng.
+- **Retrieval:** BM25 xếp `S26#1`, `F26#1` và `H26#8.1` đầu tiên cho từng câu tương ứng, với điểm 7.374, 15.501 và 8.142. Path trích toàn bộ chunk đầu và trả lời đúng cả ba câu.
+- **LLM (stub):** Cả ba phản hồi dẫn đúng nguồn nên `correct()` chấm Pass. E22 và E23 đúng cả nội dung. E21 chỉ nêu giới hạn 5 cuốn trong 14 ngày vì `StubLLM` lấy câu đầu của chunk. Điều kiện gia hạn nằm ở câu thứ hai, còn bộ chấm chỉ kiểm tra ID nguồn.
