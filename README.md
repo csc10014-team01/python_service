@@ -1,10 +1,11 @@
 # Study Assistant - Python Service
 
-Backend trợ lý học tập của nhóm CSC10014. Lab03 cung cấp phần xử lý nghiệp vụ `assistant_core`; Lab04 bổ sung REST API bằng FastAPI trong `assistant_api`.
+Trợ lý học tập của nhóm CSC10014 gồm phần xử lý nghiệp vụ `assistant_core`,
+REST API bằng FastAPI trong `assistant_api` và giao diện Streamlit Lab07 trong `ui/`.
+UI giao tiếp với backend qua HTTP API.
 
-Nhóm phát triển Lab04 trực tiếp trong `src/` và `tests/` ở gốc repo.
-Bộ bài warm-up và code mẫu trong `lab04/` chỉ giữ trên máy để tham khảo,
-được bỏ qua bởi Git và không nằm trong bản dự án chung trên GitHub.
+Nhóm phát triển trực tiếp trong `src/`, `ui/` và `tests/` ở gốc repo.
+Mọi lệnh bên dưới chạy từ thư mục gốc `python_service`.
 
 ## 1. Cài đặt trên Windows với Git Bash
 
@@ -24,7 +25,8 @@ terminal mới, rồi cài dependencies:
 source .venv/Scripts/activate
 python --version
 python -c "import sys; print(sys.executable)"
-python -m pip install -r requirements.txt && python -m pip install -e .
+python -m pip install -r requirements.txt
+python -m pip install -e .
 python -m pip check
 ```
 
@@ -35,7 +37,9 @@ python -m pip check
 Chỉ chạy lệnh sau nếu chưa có `.env`:
 
 ```bash
-cp .env.example .env
+if [ ! -e .env ]; then
+  cp .env.example .env
+fi
 ```
 
 Mở `.env`, đặt key thử nghiệm để dùng endpoint xem feedback của admin:
@@ -52,20 +56,54 @@ Biến môi trường của terminal được ưu tiên hơn giá trị trong `.
 Chỉ commit `.env.example`; `.env`, key thật và môi trường `.venv` phải được bỏ qua
 bởi Git. Nếu đã có `.env`, bổ sung các biến mới thay vì chép đè file.
 
-## 3. Chạy API
+## 3. Chạy API và UI bằng hai terminal Git Bash
 
-Chạy từ gốc repo sau khi kích hoạt `.venv`:
+Mở hai terminal Git Bash tại gốc repo `python_service`.
+Kích hoạt cùng môi trường `.venv` trong mỗi terminal và chạy API trước UI.
+
+### Terminal 1 — API
 
 ```bash
+source .venv/Scripts/activate
 python -m uvicorn assistant_api.main:create_app --factory --reload
 ```
 
 - Kiểm tra server: <http://127.0.0.1:8000/health>
 - Swagger UI để thử endpoint: <http://127.0.0.1:8000/docs>
 
-Giữ terminal mở để server nhận request. Nhấn `Ctrl+C` để dừng.
-Muốn chạy lệnh khác trong lúc server hoạt động, mở Git Bash thứ hai và kích hoạt
-`.venv` tại gốc repo.
+### Terminal 2 — UI Streamlit
+
+```bash
+source .venv/Scripts/activate
+python -m streamlit run ui/app.py
+```
+
+Mở <http://localhost:8501> để dùng giao diện chat.
+UI mặc định gọi API tại `http://127.0.0.1:8000`.
+Giữ cả hai terminal chạy khi sử dụng ứng dụng. Nhấn `Ctrl+C` trong từng terminal
+để dừng server tương ứng.
+
+### Đổi địa chỉ API cho UI
+
+Nếu API chạy ở cổng khác, đặt `ASSISTANT_API_URL` trong terminal Git Bash chạy UI
+trước khi khởi động Streamlit. Ví dụ dùng cổng 8001:
+
+Terminal 1, thay lệnh chạy API ở trên bằng:
+
+```bash
+python -m uvicorn assistant_api.main:create_app --factory --reload --port 8001
+```
+
+Terminal 2:
+
+```bash
+export ASSISTANT_API_URL="http://127.0.0.1:8001"
+python -m streamlit run ui/app.py
+```
+
+UI hiện đọc biến này từ môi trường của terminal, chưa tự nạp từ file `.env`.
+Để quay về cổng 8000, dừng hai server, chạy lệnh API mặc định và đặt
+`export ASSISTANT_API_URL="http://127.0.0.1:8000"` trước khi khởi động lại UI.
 
 ### Trạng thái Lab04
 
@@ -82,7 +120,10 @@ T1–T4, H1 và phần F đã được triển khai. `/health` dùng để kiể
 
 `GET /v1/feedback` yêu cầu header
 `X-API-Key` khớp với `API_ADMIN_KEY` trong `.env`.
-Feedback lưu trong bộ nhớ và mất khi server khởi động lại.
+Feedback lưu trong database theo `DATABASE_URL`. Với cấu hình mặc định
+`sqlite:///assistant.db`, dữ liệu nằm trong file `assistant.db` ở gốc repo và
+được giữ lại khi server khởi động lại. Gửi feedback với `request_id` không tồn tại
+trả về `404`.
 
 `GET /v1/offices` trả danh sách văn phòng được sắp xếp theo tên, mỗi mục gồm
 `name`, `room` và `hours`.
@@ -97,7 +138,7 @@ Mọi lệnh bên dưới chạy từ gốc repo, trong `.venv` đã cài depend
 
 ### Chạy toàn bộ test
 
-Chạy cả core Lab03 và API Lab04:
+Chạy toàn bộ test trong `tests/`, gồm core, API, database, RAG và UI:
 
 ```bash
 python -m pytest -q
@@ -105,7 +146,7 @@ python -m pytest -q
 
 ### Chạy riêng từng nhóm
 
-Chạy test core Lab03:
+Chạy các test ngoài nhóm API:
 
 ```bash
 python -m pytest -q --ignore=tests/test_api.py
@@ -214,10 +255,18 @@ python_service/
 |-- api-tests/                  # curl script và Postman collection
 |-- data/                       # dữ liệu offices và handbook
 |-- docs/                       # tài liệu dự án
+|-- eval/                       # đánh giá các hướng xử lý câu hỏi
+|-- scripts/                    # migration và seed database
+|-- sql/                        # schema, migrations và truy vấn
 |-- src/
-|   |-- assistant_core/         # nghiệp vụ Lab03 và phần core bổ sung của H1
-|   `-- assistant_api/          # lớp HTTP của Lab04
-|-- tests/                     # test core và API của dự án chung
+|   |-- assistant_core/         # nghiệp vụ, truy xuất tài liệu và AI
+|   `-- assistant_api/          # REST API và lưu trữ database
+|-- ui/                        # giao diện Streamlit và HTTP client
+|-- tests/                     # test core, API, database, RAG và UI
+|   `-- test_ui.py              # test HTTP client và logic UI
+|-- worksheets/                # phiếu đánh giá Lab07
+|   |-- usability_checklist.md
+|   `-- user_test_observations.md
 |-- .env.example
 |-- pyproject.toml
 `-- requirements.txt
