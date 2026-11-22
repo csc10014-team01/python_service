@@ -1,4 +1,5 @@
 import httpx
+import pytest
 
 from ui.api_client import AssistantClient, ChatResult
 from ui.logic import format_sources, status_note, validate_input
@@ -46,11 +47,15 @@ def test_validate_input():
     assert validate_input("hello") is None
 
 
+# Remove this marker in the same PR that completes L1.
+@pytest.mark.xfail(reason="L1 is not implemented yet", raises=NotImplementedError, strict=True)
 def test_format_sources():
     assert format_sources([]) == ""
     assert format_sources(OK["sources"]) == "Sources: S26#1 — 1 Library borrowing"
 
 
+# Remove this marker in the same PR that completes L2.
+@pytest.mark.xfail(reason="L2 is not implemented yet", raises=NotImplementedError, strict=True)
 def test_status_note():
     assert "Training Office" in status_note(ChatResult(ok=True, escalate=True))
     assert status_note(ChatResult(ok=True)) is None
