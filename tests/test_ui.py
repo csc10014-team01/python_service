@@ -48,10 +48,9 @@ def test_validate_input():
 
 
 # Remove this marker in the same PR that completes L1.
-@pytest.mark.xfail(reason="L1 is not implemented yet", raises=NotImplementedError, strict=True)
 def test_format_sources():
     assert format_sources([]) == ""
-    assert format_sources(OK["sources"]) == "Sources: S26#1 — 1 Library borrowing"
+    assert format_sources(OK["sources"]) == "Sources: S26#1 – 1 Library borrowing"
 
 
 # Remove this marker in the same PR that completes L2.
