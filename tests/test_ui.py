@@ -53,8 +53,22 @@ def test_format_sources():
     assert format_sources(OK["sources"]) == "Sources: S26#1 – 1 Library borrowing"
 
 
-# Remove this marker in the same PR that completes L2.
-@pytest.mark.xfail(reason="L2 is not implemented yet", raises=NotImplementedError, strict=True)
-def test_status_note():
-    assert "Training Office" in status_note(ChatResult(ok=True, escalate=True))
-    assert status_note(ChatResult(ok=True)) is None
+@pytest.mark.parametrize(
+    ("escalate", "degraded", "expected"),
+    [
+        (False, False, None),
+        (False, True, "Shown directly from the source document (the AI helper was unavailable)."),
+        (
+            True,
+            False,
+            "I could not find this in the official documents. A staff member can help: Training Office, room I.101.",
+        ),
+        (
+            True,
+            True,
+            "I could not find this in the official documents. A staff member can help: Training Office, room I.101.",
+        ),
+    ],
+)
+def test_status_note(escalate, degraded, expected):
+    assert status_note(ChatResult(ok=True, escalate=escalate, degraded=degraded)) == expected
