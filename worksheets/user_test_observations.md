@@ -16,7 +16,7 @@
 
 Planned improvement: Introduce a dedicated, expandable reference section with explanatory text to make answer sources more visible and understandable.
 
-**Commit link:** [To be added after implementation]
+**Commit link:** [26e364c](https://github.com/csc10014-team01/python_service/commit/26e364c)
 
 ## Before / After screenshots
 
