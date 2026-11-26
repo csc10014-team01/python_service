@@ -41,7 +41,12 @@ for i, m in enumerate(st.session_state.messages):
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
         if m.get("sources"):
-            st.caption(m["sources"])
+            with st.expander("📚 Reference documents", expanded=True):
+                st.markdown(m["sources"])
+                st.caption(
+                    "These are the official document sections "
+                    "used to generate this answer."
+                )
         if m.get("note"):
             st.info(m["note"])
         rid = m.get("request_id")
