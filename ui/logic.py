@@ -30,7 +30,7 @@ def format_sources(sources: list[dict]) -> str:
     """'Sources: H26#5.3 - 5.3 Thesis registration' or '' if none."""
     if not sources:
         return ""
-    return "Sources: " + "; ".join(f"{s['id']} – {s['title']}" for s in sources)
+    return "Sources: " + "; ".join(f"{s['id']} - {s['title']}" for s in sources)
 
 
 def status_note(result: ChatResult) -> str | None:

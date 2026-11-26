@@ -26,15 +26,29 @@ if "rated" not in st.session_state:
     st.session_state.rated = set()
 
 st.title("🎓 FIT Study Assistant")
+st.caption("This is an AI assistant. Check important decisions with the Training Office.")
 if not client.healthy():
-    st.error("The assistant backend is not reachable. Start it with: uvicorn assistant_api.main:create_app --factory")
+    st.error("Cannot reach the assistant. Please try again when the service is back.")
+
+
+def rate_answer(request_id: str, rating: int) -> None:
+    if request_id in st.session_state.rated:
+        return
+    if not client.send_feedback(request_id, rating):
+        st.session_state.feedback_notice = "Could not save your feedback. Please try again."
+        return
+    st.session_state.rated.add(request_id)
+    st.session_state.feedback_notice = "Thanks for your feedback!"
+
+
+if notice := st.session_state.pop("feedback_notice", None):
+    st.toast(notice)
 
 with st.sidebar:
     st.subheader("Try an example")
     for ex in EXAMPLES:
         if st.button(ex, use_container_width=True):
             st.session_state.pending = ex
-    st.caption("This is an AI assistant. Check important decisions with the Training Office.")
 
 # ---- history -------------------------------------------------------------------
 for i, m in enumerate(st.session_state.messages):
@@ -46,19 +60,15 @@ for i, m in enumerate(st.session_state.messages):
             st.info(m["note"])
         rid = m.get("request_id")
         if rid and rid not in st.session_state.rated:
-            c1, c2, _ = st.columns([1, 1, 6])
-            if c1.button("👍", key=f"up{i}"):
-                client.send_feedback(rid, 1)
-                st.session_state.rated.add(rid)
-                st.toast("Thanks for your feedback!")
-            if c2.button("👎", key=f"down{i}"):
-                client.send_feedback(rid, -1)
-                st.session_state.rated.add(rid)
-                st.toast("Thanks — we will look at this answer.")
+            c1, c2 = st.columns(2)
+            c1.button("👍 Helpful", key=f"up{i}", on_click=rate_answer, args=(rid, 1))
+            c2.button("👎 Not helpful", key=f"down{i}", on_click=rate_answer, args=(rid, -1))
 
 # ---- new question ----------------------------------------------------------------
-question = st.chat_input("Ask about fees, offices or the handbook…") or st.session_state.pop("pending", None)
-if question:
+typed_question = st.chat_input("Ask about fees, offices or the handbook…")
+example_question = st.session_state.pop("pending", None)
+question = typed_question if typed_question is not None else example_question
+if question is not None:
     problem = validate_input(question)
     if problem:
         st.warning(problem)

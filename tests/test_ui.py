@@ -47,10 +47,9 @@ def test_validate_input():
     assert validate_input("hello") is None
 
 
-# Remove this marker in the same PR that completes L1.
 def test_format_sources():
     assert format_sources([]) == ""
-    assert format_sources(OK["sources"]) == "Sources: S26#1 – 1 Library borrowing"
+    assert format_sources(OK["sources"]) == "Sources: S26#1 - 1 Library borrowing"
 
 
 @pytest.mark.parametrize(
